@@ -54,6 +54,21 @@ async def set_category(interaction: discord.Interaction, category_id: str):
     except ValueError:
         await interaction.response.send_message("Invalid ID format.", ephemeral=True)
 
+@client.tree.command(name="delete-channel", description="Admin only: Delete a channel")
+@app_commands.describe(channel="The channel to delete")
+async def delete_channel(interaction: discord.Interaction, channel: discord.TextChannel):
+    if str(interaction.user.id) != ADMIN_USER_ID:
+        await interaction.response.send_message("You are not authorized to use this command.", ephemeral=True)
+        return
+
+    try:
+        await channel.delete()
+        await interaction.response.send_message(f"Channel **{channel.name}** has been deleted.", ephemeral=True)
+    except discord.Forbidden:
+        await interaction.response.send_message("I do not have permission to delete that channel.", ephemeral=True)
+    except discord.HTTPException as e:
+        await interaction.response.send_message(f"Failed to delete channel: {e}", ephemeral=True)
+
 
 @client.tree.command(name="create-channel", description="Creates a new text channel")
 @app_commands.describe(channel_name="The name of the channel to create")
