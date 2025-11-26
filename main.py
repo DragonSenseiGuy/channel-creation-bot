@@ -71,8 +71,8 @@ async def delete_channel(interaction: discord.Interaction, channel: discord.Text
 
 
 @client.tree.command(name="create-channel", description="Creates a new text channel")
-@app_commands.describe(channel_name="The name of the channel to create")
-async def create_channel(interaction: discord.Interaction, channel_name: str):
+@app_commands.describe(channel_name="The name of the channel to create", description="Optional description for the channel")
+async def create_channel(interaction: discord.Interaction, channel_name: str, description: str = None):
     # Check if user has reached the limit
     user_id = interaction.user.id
     current_count = storage.get_user_channel_count(user_id)
@@ -90,10 +90,15 @@ async def create_channel(interaction: discord.Interaction, channel_name: str):
 
     # Create the channel
     try:
+        print(f"Creating channel '{channel_name}' with description: '{description}'")
         # Defer response since channel creation might take a moment
         await interaction.response.defer(ephemeral=True)
         
-        new_channel = await interaction.guild.create_text_channel(name=channel_name, category=category)
+        new_channel = await interaction.guild.create_text_channel(name=channel_name, category=category, topic=description)
+        
+        # Explicitly set topic if provided, just in case create_text_channel didn't apply it
+        if description:
+            await new_channel.edit(topic=description)
         
         # Ping the user in the new channel
         await new_channel.send(f"Channel created {interaction.user.mention}!")
